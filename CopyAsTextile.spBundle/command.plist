@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>author</key>
+	<string>Masayuki Kobayashi</string>
+	<key>category</key>
+	<string></string>
+	<key>command</key>
+	<string>#!/usr/bin/ruby
+
+Encoding.default_external = "UTF-8"
+line = readlines
+ary=line.map{ |s| s.chomp.split(/\t/)}
+csv = []
+keys = ary.shift.map(&amp; :to_sym)
+ary.each_with_index do |row|
+  hash = {}
+  row.each_with_index do |x, idx|
+    hash[keys[idx]] = x
+  end
+  csv &lt;&lt; hash
+end
+
+class Monotab 
+
+  def self.mb_length(str)
+    cnt = 0
+    str.each_char do |ch|    
+      if ch.ord &lt; 255 
+        cnt += 1
+      else
+        cnt += 2
+      end
+    end
+    cnt
+  end
+
+  def self.col_width(table)
+    col_length = []
+    table.each do |cols|
+      cols.each.with_index do |col, i|
+        if col_length[i].to_i &lt; mb_length(col.to_s)  
+          col_length[i] = mb_length(col.to_s)
+        end
+      end
+    end
+    col_length
+  end
+
+  def self.align_text(str,align,length)
+    padding_length = length - mb_length(str)
+    case align
+    when 'center'
+      paddng_left  = (padding_length.to_f / 2).floor
+      paddng_right = (padding_length.to_f / 2).ceil
+      return ' ' * paddng_left + str + ' ' * paddng_right 
+    when 'left'
+      return str + ' ' * padding_length 
+    when 'right'
+      return ' ' * padding_length + str
+    else
+      raise "invalid align: #{align}"
+    end
+  end
+
+  def self.numeric?(str)
+    numeric_chars = '0123456789-()%,'
+    str.each_char do |ch| 
+      return false unless numeric_chars.include?(ch)    
+    end
+    true
+  end
+
+  def self.header_line(col_width)
+    values = []
+    col_width.each do |width|
+      values &lt;&lt; '-' * width
+    end
+    "|#{values.join('+')}|"
+  end
+
+  def self.build_monotab(table,header=true)
+    table = hash_to_array(table) if hash_array?(table) 
+    cw = col_width(table)
+    lines = []
+    table.each.with_index do |cols,row_index|   
+      text_fields = []
+      cols.map!(&amp;:to_s) 
+      cols.each.with_index do |col,col_index|
+        if row_index.zero?  &amp;&amp; header
+          align = 'center'
+        else
+          if numeric?(col)
+            align = 'right'
+          else
+            align = 'left'
+          end
+        end
+        text_fields &lt;&lt; align_text(col,align,cw[col_index])
+      end
+      lines &lt;&lt; '|' + text_fields.join('|') + '|'
+      lines &lt;&lt; header_line(cw) if row_index.zero?
+    end
+    lines.join("\n")
+  end
+
+  def self.hash_to_array(hash_array)
+    table = []
+    colnames = hash_array.first.keys
+    table &lt;&lt; colnames
+    hash_array.each do |items|
+      row  = []
+      colnames.each do |colname|
+        row &lt;&lt; items[colname] 
+      end
+      table &lt;&lt; row
+    end
+    table
+  end
+
+  def self.hash_array?(obj)
+    obj.first.class == Hash ? true : false 
+  end
+end
+
+table = Monotab.build_monotab(csv)
+
+IO.popen("__CF_USER_TEXT_ENCODING=$UID:0x8000100:0x8000100 pbcopy", "w") { |pipe| pipe.puts table }</string>
+	<key>contact</key>
+	<string>fabjoveqjnl@tznvy.pbz</string>
+	<key>description</key>
+	<string>Creates a text-only table of the result set given as input. 
+
+Output table is UTF8-encoded and should be viewed with a monospaced font.</string>
+	<key>input</key>
+	<string>selectedtablerowsastab</string>
+	<key>keyEquivalent</key>
+	<string></string>
+	<key>name</key>
+	<string>CopyAsTextile</string>
+	<key>scope</key>
+	<string>datatable</string>
+	<key>uuid</key>
+	<string>564E413C-D9FE-4C55-96C0-BB37D6142C00</string>
+</dict>
+</plist>
