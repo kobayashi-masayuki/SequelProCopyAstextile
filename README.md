@@ -1,4 +1,4 @@
-# SewquelProCopyAsTextile
+# SequelProCopyAsTextile
 Copy selected rows as a Textile.
 This supports Japanese.
 
